@@ -1,0 +1,48 @@
+# "org" ensures this Service is used with the correct Serverless Framework Access Key.
+org: aranda
+# "app" enables Serverless Framework Dashboard features and sharing them with other Services.
+app: app-jogajunto
+# "service" is the name of this project. This will also be added to your AWS resource names.
+service: app-jogajunto
+
+provider:
+  name: aws
+  runtime: python3.14
+  architecture: arm64
+  # Uncomment to easily set up a custom domain. Read the docs for more details:
+  # https://www.serverless.com/framework/docs/providers/aws/guide/domains
+  # domain: api.example.com
+
+functions:
+  create_lobby:
+    handler: src.handlers.create_lobby.handler
+    events:
+      - httpApi:
+          path: /create_lobby/
+          method: post
+  get_lobby:
+    handler: src.handlers.get_lobby.handler
+    events:
+      - httpApi:
+          path: /get_lobby/{lobby_id}
+          method: get
+  join_lobby:
+    handler: src.handlers.join_lobby.handler
+    events:
+      - httpApi:
+          path: /join_lobby/{lobby_id}
+          method: post
+
+resources:
+  Resources:
+    LobbiesTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: lobbies
+        AttributeDefinitions:
+          - AttributeName: lobby_id
+            AttributeType: S
+        KeySchema:
+          - AttributeName: lobby_id
+            KeyType: HASH
+        
