@@ -7,30 +7,40 @@ service: app-jogajunto
 
 provider:
   name: aws
-  runtime: python3.14
+  runtime: python3.12
   architecture: arm64
   # Uncomment to easily set up a custom domain. Read the docs for more details:
   # https://www.serverless.com/framework/docs/providers/aws/guide/domains
   # domain: api.example.com
+  iam:
+    role:
+      statements:
+        - Effect: Allow
+          Action:
+            - dynamodb:PutItem
+            - dynamodb:GetItem
+            - dynamodb:UpdateItem
+          Resource:
+            - "arn:aws:dynamodb:${aws:region}:${aws:accountId}:table/lobbies"
 
 functions:
   create_lobby:
     handler: src.handlers.create_lobby.handler
     events:
       - httpApi:
-          path: /create_lobby/
+          path: /lobbies
           method: post
   get_lobby:
     handler: src.handlers.get_lobby.handler
     events:
       - httpApi:
-          path: /get_lobby/{lobby_id}
+          path: /lobbies/{lobby_id}
           method: get
   join_lobby:
     handler: src.handlers.join_lobby.handler
     events:
       - httpApi:
-          path: /join_lobby/{lobby_id}
+          path: /lobbies/{lobby_id}/join
           method: post
 
 resources:
@@ -39,10 +49,15 @@ resources:
       Type: AWS::DynamoDB::Table
       Properties:
         TableName: lobbies
+        billingMode: PAY_PER_REQUEST
         AttributeDefinitions:
-          - AttributeName: lobby_id
+          - AttributeName: PK
+            AttributeType: S
+          - AttributeName: SK
             AttributeType: S
         KeySchema:
-          - AttributeName: lobby_id
+          - AttributeName: PK
             KeyType: HASH
+          - AttributeName: SK
+            KeyType: RANGE   
         
