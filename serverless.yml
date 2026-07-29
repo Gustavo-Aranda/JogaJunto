@@ -22,22 +22,28 @@ provider:
             - dynamodb:UpdateItem
           Resource:
             - "arn:aws:dynamodb:${aws:region}:${aws:accountId}:table/lobbies"
+  timeout: 5
+  httpApi:
+    metrics: true
 
 functions:
   create_lobby:
     handler: src.handlers.create_lobby.handler
+    reservedConcurrency: 5
     events:
       - httpApi:
           path: /lobbies
           method: post
   get_lobby:
     handler: src.handlers.get_lobby.handler
+    reservedConcurrency: 5
     events:
       - httpApi:
           path: /lobbies/{lobby_id}
           method: get
   join_lobby:
     handler: src.handlers.join_lobby.handler
+    reservedConcurrency: 5
     events:
       - httpApi:
           path: /lobbies/{lobby_id}/join
