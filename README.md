@@ -17,7 +17,6 @@ This template demonstrates how to make a simple HTTP API with Python running on 
 This template does not include any kind of persistence (database). For more advanced examples, check out the [serverless/examples repository](https://github.com/serverless/examples/) which includes DynamoDB, Mongo, Fauna and other examples.
 
 ## Usage
-
 ### Deployment
 
 ```
