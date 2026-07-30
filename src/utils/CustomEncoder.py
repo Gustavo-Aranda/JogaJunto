@@ -1,7 +1,7 @@
-from json import JSONEncoder
+import json
 from decimal import Decimal
 
-class CustomEncoder(JSONEncoder):
+class CustomEncoder(json.JSONEncoder):
     def default(self, obj):
         if isinstance(obj, Decimal):
             return str(obj)
