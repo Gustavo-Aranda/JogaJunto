@@ -24,17 +24,17 @@ def handler (event, context):
             'statusCode': 400,
             'body': json.dumps({'message': 'ID do usuário não fornecido'})
         }
+        
+    if isLobbyFull(lobby):
+        return {
+            'statusCode': 400,
+            'body': json.dumps({'message': 'Lobby cheio'})
+        }
     
     if isUserInLobby(lobby, user_id):
         return {
             'statusCode': 400,
             'body': json.dumps({'message': 'Usuário já está no lobby'})
-        }
-
-    if isLobbyFull(lobby):
-        return {
-            'statusCode': 400,
-            'body': json.dumps({'message': 'Lobby cheio'})
         }
         
     try:
