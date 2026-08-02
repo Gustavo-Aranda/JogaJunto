@@ -37,7 +37,7 @@ def handler(event, context):
     }
 
 def validateLobbyData(lobby_data):
-    required_fields = ['lobby_name', 'max_players', 'match_time', 'location', 'price', 'sport']
+    required_fields = ['lobby_name', 'max_players', 'match_time', 'location', 'price', 'sport_lobby']
     
     for field in required_fields:
         if field not in lobby_data:
@@ -48,7 +48,7 @@ def validateLobbyData(lobby_data):
                     })
             }
             
-        if field in ['lobby_name', 'match_time', 'sport']:
+        if field in ['lobby_name', 'match_time', 'sport_lobby']:
             if not isinstance(lobby_data[field], str) or not lobby_data[field].strip():
                 return False, {
                     'statusCode': 400,
@@ -93,7 +93,7 @@ def putLobby(lobby_data):
     
     cidade = str(loc['city']).strip().lower().replace(' ', '_')
     estado = str(loc['state']).upper().strip()
-    esporte = str(lobby_data['sport']).upper()
+    esporte = str(lobby_data['sport_lobby']).upper()
     gsi1_sk = f"LOC#{estado}#{cidade}#SPORT#{esporte}#TIME#{lobby_data['match_time']}"
     
     lobby_item = {
@@ -103,7 +103,7 @@ def putLobby(lobby_data):
         'GSI1_SK': gsi1_sk,
         'lobby_id': lobby_id,
         'lobby_name': lobby_data['lobby_name'],
-        'sport': esporte,
+        'sport_lobby': esporte,
         'max_players': lobby_data['max_players'],
         'current_players': 0,
         'status_lobby': 'OPEN',
