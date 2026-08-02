@@ -1,6 +1,7 @@
 import boto3
 import json
 import uuid
+from decimal import Decimal
 
 resource = boto3.resource('dynamodb')
 lobbies_table = resource.Table('lobbies')
@@ -8,7 +9,7 @@ lobbies_table = resource.Table('lobbies')
 def handler(event, context):
     try:
         lobby_data = json.loads(event.get('body', '{}'))
-        if lobby_data is None:
+        if not lobby_data:
             return {
                 'statusCode': 400,
                 'body': json.dumps({'message': 'Dados do lobby não fornecidos'})
@@ -31,12 +32,12 @@ def handler(event, context):
         'statusCode': 201,
         'body': json.dumps({
             'message': f'Lobby {lobby_item["lobby_id"]} criada com sucesso.', 
-            'lobby': lobby_item
+            'lobby_id': lobby_item['lobby_id']
             })
     }
 
 def validateLobbyData(lobby_data):
-    required_fields = ['lobby_name', 'max_players', 'match_time', 'location', 'price']
+    required_fields = ['lobby_name', 'max_players', 'match_time', 'location', 'price', 'sport']
     
     for field in required_fields:
         if field not in lobby_data:
@@ -47,7 +48,7 @@ def validateLobbyData(lobby_data):
                     })
             }
             
-        if field == 'lobby_name' or field == 'location' or field == 'match_time':
+        if field in ['lobby_name', 'match_time', 'sport']:
             if not isinstance(lobby_data[field], str) or not lobby_data[field].strip():
                 return False, {
                     'statusCode': 400,
@@ -56,7 +57,7 @@ def validateLobbyData(lobby_data):
                     })
                 }
             
-        if field == 'max_players' or field == 'price':
+        if field in ['max_players', 'price']:
             if not isinstance(lobby_data[field], int) or lobby_data[field] < 0:
                 return False, {
                     'statusCode': 400,
@@ -64,22 +65,60 @@ def validateLobbyData(lobby_data):
                         'message': f'Campo {field} deve ser um inteiro não negativo'
                     })
                 }
+        
+        if field == 'location':
+            if not isinstance(lobby_data['location'], dict):
+                return False, {
+                    'statusCode': 400,
+                    'body': json.dumps({
+                        'message': f'Campo {field} deve ser um objeto JSON'
+                    })
+                }
+            loc = lobby_data['location']
+            loc_required_fields = ['name', 'address', 'city', 'state', 'lat', 'lng']
+            for loc_field in loc_required_fields:
+                if loc_field not in loc:
+                    return False, {
+                        'statusCode': 400,
+                        'body': json.dumps({
+                            'message': f'Campo obrigatório ausente em location: {loc_field}'
+                        })
+                    }
   
     return True, None
 
 def putLobby(lobby_data):
     lobby_id = str(uuid.uuid4())
+    loc      = lobby_data['location']
+    
+    cidade_formatted = str(loc['city']).strip().lower().replace(' ', '_')
+    estado_formatted = str(loc['state']).upper().strip()
+    gsi1_pk = f'LOC#{estado_formatted}#{cidade_formatted}'
+    
+    esporte_formatted = str(lobby_data['sport']).upper()
+    gsi1_sk = f"SPORT#{esporte_formatted}#TIME#{lobby_data['match_time']}"
+    
     lobby_item = {
         'PK': f'LOBBY#{lobby_id}',
         'SK': 'METADATA',
+        'GSI1_PK': gsi1_pk,
+        'GSI1_SK': gsi1_sk,
         'lobby_id': lobby_id,
         'lobby_name': lobby_data['lobby_name'],
+        'sport': esporte_formatted,
         'max_players': lobby_data['max_players'],
         'current_players': 0,
         'status': 'OPEN',
         'match_time': lobby_data['match_time'],
-        'location': lobby_data['location'],
-        'price': lobby_data['price']
+        'price': lobby_data['price'],
+        'location': {
+            'name': loc['name'],
+            'address': loc['address'],
+            'city': loc['city'],
+            'state': loc['state'],
+            'lat': Decimal(str(loc['lat'])),
+            'lng': Decimal(str(loc['lng']))
+        }
     }
     
     lobbies_table.put_item(Item=lobby_item)
