@@ -91,21 +91,19 @@ def putLobby(lobby_data):
     lobby_id = str(uuid.uuid4())
     loc      = lobby_data['location']
     
-    cidade_formatted = str(loc['city']).strip().lower().replace(' ', '_')
-    estado_formatted = str(loc['state']).upper().strip()
-    gsi1_pk = f'LOC#{estado_formatted}#{cidade_formatted}'
-    
-    esporte_formatted = str(lobby_data['sport']).upper()
-    gsi1_sk = f"SPORT#{esporte_formatted}#TIME#{lobby_data['match_time']}"
+    cidade = str(loc['city']).strip().lower().replace(' ', '_')
+    estado = str(loc['state']).upper().strip()
+    esporte = str(lobby_data['sport']).upper()
+    gsi1_sk = f"LOC#{estado}#{cidade}SPORT#{esporte}#TIME#{lobby_data['match_time']}"
     
     lobby_item = {
         'PK': f'LOBBY#{lobby_id}',
         'SK': 'METADATA',
-        'GSI1_PK': gsi1_pk,
+        'GSI1_PK': 'STATUS#OPEN',
         'GSI1_SK': gsi1_sk,
         'lobby_id': lobby_id,
         'lobby_name': lobby_data['lobby_name'],
-        'sport': esporte_formatted,
+        'sport': esporte,
         'max_players': lobby_data['max_players'],
         'current_players': 0,
         'status': 'OPEN',
