@@ -47,6 +47,12 @@ functions:
       - httpApi:
           path: /lobbies/{lobby_id}/join
           method: post
+  search_lobby:
+    handler: src.handlers.search_lobbies.handler
+    events:
+      - httpApi:
+          path: /lobbies/search
+          method: get
 
 resources:
   Resources:
