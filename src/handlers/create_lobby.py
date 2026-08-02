@@ -94,7 +94,7 @@ def putLobby(lobby_data):
     cidade = str(loc['city']).strip().lower().replace(' ', '_')
     estado = str(loc['state']).upper().strip()
     esporte = str(lobby_data['sport']).upper()
-    gsi1_sk = f"LOC#{estado}#{cidade}SPORT#{esporte}#TIME#{lobby_data['match_time']}"
+    gsi1_sk = f"LOC#{estado}#{cidade}#SPORT#{esporte}#TIME#{lobby_data['match_time']}"
     
     lobby_item = {
         'PK': f'LOBBY#{lobby_id}',
@@ -106,7 +106,7 @@ def putLobby(lobby_data):
         'sport': esporte,
         'max_players': lobby_data['max_players'],
         'current_players': 0,
-        'status': 'OPEN',
+        'status_lobby': 'OPEN',
         'match_time': lobby_data['match_time'],
         'price': lobby_data['price'],
         'location': {
