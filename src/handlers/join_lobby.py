@@ -38,7 +38,7 @@ def handler (event, context):
         }
         
     try:
-        addPlayer(lobby_id, user_id)
+        addPlayer(lobby, user_id)
     except ClientError as e:
         if e.response['Error']['Code'] == 'ConditionalCheckFailedException':
             return {
@@ -66,12 +66,21 @@ def isUserInLobby(lobby, user_id):
     return user_id in players
 
 
-def addPlayer(lobby_id, user_id):
+def addPlayer(lobby_data, user_id):
     response = lobbies_table.update_item(
-        Key={'PK': f'LOBBY#{lobby_id}', 'SK': 'METADATA'},
+        Key={'PK': f'LOBBY#{lobby_data["lobby_id"]}', 'SK': 'METADATA'},
         UpdateExpression="SET current_players = current_players + :inc, players = list_append(if_not_exists(players, :empty_list), :new_player)",
         ConditionExpression="current_players < max_players AND (attribute_not_exists(players) OR NOT contains(players, :user_id))",       
         ExpressionAttributeValues={':inc': 1, ':new_player': [user_id], ':empty_list': [], ':user_id': user_id},
         ReturnValues="UPDATED_NEW"
     )
+    
+    new_current_players = response['Attributes']['current_players']
+    if new_current_players == lobby_data.get('max_players'):
+        lobbies_table.update_item(
+            Key={'PK': f'LOBBY#{lobby_data["lobby_id"]}', 'SK': 'METADATA'},
+            UpdateExpression="SET status_lobby = :full, GSI1_PK = :gsi_full",
+            ExpressionAttributeValues={':full': 'FULL', ':gsi_full': 'STATUS#FULL'}
+        )
+    
     return response
