@@ -20,8 +20,10 @@ provider:
             - dynamodb:PutItem
             - dynamodb:GetItem
             - dynamodb:UpdateItem
+            - dynamodb:Query
           Resource:
             - "arn:aws:dynamodb:${aws:region}:${aws:accountId}:table/lobbies"
+            - "arn:aws:dynamodb:${aws:region}:${aws:accountId}:table/lobbies/index/*"
   timeout: 5
   httpApi:
     metrics: true
@@ -58,9 +60,22 @@ resources:
             AttributeType: S
           - AttributeName: SK
             AttributeType: S
+          - AttributeName: GSI1_PK
+            AttributeType: S
+          - AttributeName: GSI1_SK
+            AttributeType: S
         KeySchema:
           - AttributeName: PK
             KeyType: HASH
           - AttributeName: SK
-            KeyType: RANGE   
+            KeyType: RANGE 
+        GlobalSecondaryIndexes:
+          - IndexName: GSI1
+            KeySchema:
+              - AttributeName: GSI1_PK
+                KeyType: HASH
+              - AttributeName: GSI1_SK
+                KeyType: RANGE
+            Projection:
+              ProjectionType: ALL  
         
