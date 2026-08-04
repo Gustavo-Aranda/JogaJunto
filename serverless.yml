@@ -21,6 +21,7 @@ provider:
             - dynamodb:GetItem
             - dynamodb:UpdateItem
             - dynamodb:Query
+            - dynamodb:TransactWriteItems
           Resource:
             - "arn:aws:dynamodb:${aws:region}:${aws:accountId}:table/lobbies"
             - "arn:aws:dynamodb:${aws:region}:${aws:accountId}:table/lobbies/index/*"
@@ -30,25 +31,25 @@ provider:
 
 functions:
   create_lobby:
-    handler: src.handlers.create_lobby.handler
+    handler: src.lobbies.handlers.create_lobby.handler
     events:
       - httpApi:
           path: /lobbies
           method: post
   search_lobby:
-    handler: src.handlers.search_lobbies.handler
+    handler: src.lobbies.handlers.search_lobbies.handler
     events:
       - httpApi:
           path: /lobbies/search
           method: get
   get_lobby:
-    handler: src.handlers.get_lobby.handler
+    handler: src.lobbies.handlers.get_lobby.handler
     events:
       - httpApi:
           path: /lobbies/{lobby_id}
           method: get
   join_lobby:
-    handler: src.handlers.join_lobby.handler
+    handler: src.lobbies.handlers.join_lobby.handler
     events:
       - httpApi:
           path: /lobbies/{lobby_id}/join
