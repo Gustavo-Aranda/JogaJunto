@@ -1,9 +1,6 @@
-import boto3
 import json
 from src.utils.CustomEncoder import CustomEncoder
-
-resource = boto3.resource('dynamodb')
-lobbies_table = resource.Table('lobbies')
+from src.database.dynamodb_client import get_item
 
 def handler(event, context):
     lobby_id = event.get('pathParameters', {}).get('lobby_id')
@@ -27,9 +24,4 @@ def handler(event, context):
         }
 
 def getLobby(lobby_id):
-    response = lobbies_table.get_item(
-        Key={'PK': f'LOBBY#{lobby_id}',
-             'SK': 'METADATA'}
-    )
-        
-    return response.get('Item')
+    return get_item({'PK': f'LOBBY#{lobby_id}', 'SK': 'METADATA'})

@@ -1,10 +1,7 @@
-import boto3
 import json
 from src.utils.CustomEncoder import CustomEncoder
 from boto3.dynamodb.conditions import Key
-
-resource = boto3.resource('dynamodb')
-lobbies_table = resource.Table('lobbies')
+from src.database.dynamodb_client import query_items
 
 def handler(event, context):
     query_params = event.get('queryStringParameters') or {}
@@ -46,8 +43,7 @@ def validateLocationFields(query_params):
     return True, sk_prefix
 
 def searchLobbiesByLocation(sk_prefix):
-    response = lobbies_table.query(
-        IndexName='GSI1',
-        KeyConditionExpression=Key('GSI1_PK').eq('STATUS#OPEN') & Key('GSI1_SK').begins_with(sk_prefix)
+    return query_items(
+        Key('GSI1_PK').eq('STATUS#OPEN') & Key('GSI1_SK').begins_with(sk_prefix),
+        index_name='GSI1'
     )
-    return response.get('Items', [])

@@ -1,10 +1,8 @@
-import boto3
 import json
 import uuid
 from decimal import Decimal
 
-resource = boto3.resource('dynamodb')
-lobbies_table = resource.Table('lobbies')
+from src.database.dynamodb_client import put_item
 
 def handler(event, context):
     try:
@@ -119,6 +117,6 @@ def putLobby(lobby_data):
         }
     }
     
-    lobbies_table.put_item(Item=lobby_item)
+    put_item(lobby_item)
     
     return lobby_item

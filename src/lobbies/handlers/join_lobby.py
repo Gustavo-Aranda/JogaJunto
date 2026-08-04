@@ -1,10 +1,7 @@
-import boto3
 import json
-from src.handlers.get_lobby import getLobby
 from botocore.exceptions import ClientError
-
-resource = boto3.resource('dynamodb')
-lobbies_table = resource.Table('lobbies')
+from src.lobbies.handlers.get_lobby import getLobby
+from src.database.dynamodb_client import update_item
 
 def handler (event, context):
     lobby_id = event.get('pathParameters', {}).get('lobby_id')
@@ -67,20 +64,19 @@ def isUserInLobby(lobby, user_id):
 
 
 def addPlayer(lobby_data, user_id):
-    response = lobbies_table.update_item(
-        Key={'PK': f'LOBBY#{lobby_data["lobby_id"]}', 'SK': 'METADATA'},
-        UpdateExpression="SET current_players = current_players + :inc, players = list_append(if_not_exists(players, :empty_list), :new_player)",
-        ConditionExpression="current_players < max_players AND (attribute_not_exists(players) OR NOT contains(players, :user_id))",       
-        ExpressionAttributeValues={':inc': 1, ':new_player': [user_id], ':empty_list': [], ':user_id': user_id},
-        ReturnValues="UPDATED_NEW"
+    response = update_item(
+        {'PK': f'LOBBY#{lobby_data["lobby_id"]}', 'SK': 'METADATA'},
+        "SET current_players = current_players + :inc, players = list_append(if_not_exists(players, :empty_list), :new_player)",
+        {':inc': 1, ':new_player': [user_id], ':empty_list': [], ':user_id': user_id},
+        "current_players < max_players AND (attribute_not_exists(players) OR NOT contains(players, :user_id))"
     )
     
     new_current_players = response['Attributes']['current_players']
     if new_current_players == lobby_data.get('max_players'):
-        lobbies_table.update_item(
-            Key={'PK': f'LOBBY#{lobby_data["lobby_id"]}', 'SK': 'METADATA'},
-            UpdateExpression="SET status_lobby = :full, GSI1_PK = :gsi_full",
-            ExpressionAttributeValues={':full': 'FULL', ':gsi_full': 'STATUS#FULL'}
+        update_item(
+            {'PK': f'LOBBY#{lobby_data["lobby_id"]}', 'SK': 'METADATA'},
+            "SET status_lobby = :full, GSI1_PK = :gsi_full",
+            {':full': 'FULL', ':gsi_full': 'STATUS#FULL'}
         )
     
     return response
